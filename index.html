@@ -34,7 +34,7 @@
     }
 
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme="light"]) {
         --ink: #f2eee5;
         --ink-soft: #c5c0b7;
         --navy: #071b2d;
@@ -51,6 +51,24 @@
         --success: #8fd2b8;
         --shadow: 0 14px 38px rgba(0, 0, 0, .30);
       }
+    }
+
+    :root[data-theme="dark"] {
+      --ink: #f2eee5;
+      --ink-soft: #c5c0b7;
+      --navy: #071b2d;
+      --navy-2: #123450;
+      --paper: #101820;
+      --surface: #17232d;
+      --sand: #2a343d;
+      --sand-2: #46515c;
+      --amber: #efb049;
+      --amber-deep: #ffc66a;
+      --line: #46525d;
+      --white: #ffffff;
+      --danger: #ee8c82;
+      --success: #8fd2b8;
+      --shadow: 0 14px 38px rgba(0, 0, 0, .30);
     }
 
     * { box-sizing: border-box; }
@@ -139,6 +157,21 @@
       border-radius: var(--radius-sm);
       text-decoration: none;
     }
+    .theme-toggle {
+      background: transparent;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: transform 0.2s;
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
 
     .hero {
       background: var(--navy);
@@ -868,6 +901,7 @@
         <a href="#newsletter">Newsletter</a>
         <a href="#about">About</a>
         <a class="nav-cta" href="#share">Share your story</a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
       </nav>
     </div>
   </header>
@@ -1638,6 +1672,49 @@
       setupVoiceTyping();
       updateCount();
       updateEmailRequirement();
+
+      // Theme toggle: light/dark mode
+      var themeToggle = document.getElementById('theme-toggle');
+      var root = document.documentElement;
+      function setTheme(theme) {
+        if (theme === 'dark') {
+          root.setAttribute('data-theme', 'dark');
+          themeToggle.textContent = '☀️';
+          themeToggle.setAttribute('aria-label', 'Switch to light mode');
+        } else if (theme === 'light') {
+          root.setAttribute('data-theme', 'light');
+          themeToggle.textContent = '🌙';
+          themeToggle.setAttribute('aria-label', 'Switch to dark mode');
+        } else {
+          root.removeAttribute('data-theme');
+          // Follow system preference
+          var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          themeToggle.textContent = isDark ? '☀️' : '🌙';
+          themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+        try { localStorage.setItem('scam-watch-theme', theme); } catch (e) {}
+      }
+      // Load saved preference
+      try {
+        var saved = localStorage.getItem('scam-watch-theme');
+        if (saved) setTheme(saved);
+        else {
+          var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          themeToggle.textContent = isDark ? '☀️' : '🌙';
+        }
+      } catch (e) {}
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+          var current = root.getAttribute('data-theme');
+          if (current === 'dark') setTheme('light');
+          else if (current === 'light') setTheme('dark');
+          else {
+            // No manual override yet, check system
+            var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(isDark ? 'light' : 'dark');
+          }
+        });
+      }
     }());
   </script>
 </body>
