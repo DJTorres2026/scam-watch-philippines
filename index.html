@@ -479,6 +479,55 @@
     }
     .story-warning p { margin: 0; font-size: 19px; line-height: 1.48; font-weight: 700; }
 
+    .comments-section {
+      margin-top: 48px;
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+    }
+    .comments-section h3 { margin-top: 0; }
+    .reactions-row {
+      display: flex;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .reaction-btn {
+      background: var(--paper);
+      border: 2px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .reaction-btn:hover { transform: scale(1.05); border-color: var(--amber); }
+    .reaction-btn.active { border-color: var(--amber); background: var(--sand); }
+    .comment-form-wrap { margin: 28px 0; }
+    .comment-form-wrap h4 { margin-bottom: 12px; }
+    .comment-form-wrap label { display: block; margin-bottom: 16px; font-weight: 700; }
+    .comment-form-wrap input,
+    .comment-form-wrap textarea {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 12px;
+      border: 2px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--paper);
+      color: var(--ink);
+    }
+    .comment-item {
+      padding: 16px;
+      margin-bottom: 12px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+    }
+    .comment-item .comment-author { font-weight: 700; margin-bottom: 4px; }
+    .comment-item .comment-date { font-size: 14px; color: var(--ink-soft); margin-bottom: 8px; }
+    .comment-item .comment-body { margin: 0; }
+
     .types-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -884,6 +933,7 @@
       .nav-stories, .button-stories, .mobile-nav a:first-child { animation: none; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -1010,23 +1060,36 @@
           </div>
           <div class="comments-section" id="comments">
             <h3>Comments & Reactions</h3>
-            <p class="fine-print">Share your thoughts below. You can also react with 👍 or 👎 on the discussion.</p>
-            <div id="giscus-comments">
-              <script src="https://giscus.app/client.js"
-                      data-repo="DJTorres2026/scam-watch-philippines"
-                      data-repo-id="R_kgDOUqdhoA"
-                      data-category="General"
-                      data-category-id="DIC_kwDOUqdhoM4DGWGb"
-                      data-mapping="pathname"
-                      data-strict="0"
-                      data-reactions-enabled="1"
-                      data-emit-metadata="0"
-                      data-input-position="bottom"
-                      data-theme="preferred_color_scheme"
-                      data-lang="en"
-                      crossorigin="anonymous"
-                      async>
-              </script>
+            <p class="fine-print">Share your thoughts below — no account needed.</p>
+
+            <div class="reactions-row" aria-label="Reactions">
+              <button class="reaction-btn" id="thumbs-up-btn" type="button" aria-label="Thumbs up">
+                👍 <span id="thumbs-up-count">0</span>
+              </button>
+              <button class="reaction-btn" id="thumbs-down-btn" type="button" aria-label="Thumbs down">
+                👎 <span id="thumbs-down-count">0</span>
+              </button>
+            </div>
+
+            <div class="comment-form-wrap">
+              <h4>Leave a comment</h4>
+              <form id="comment-form">
+                <label for="comment-name">Your name
+                  <input type="text" id="comment-name" maxlength="50" placeholder="What should we call you?" required />
+                </label>
+                <label for="comment-text">Your comment
+                  <textarea id="comment-text" maxlength="1000" rows="4" placeholder="Share your thoughts..." required></textarea>
+                </label>
+                <button class="button button-primary" type="submit">Post comment</button>
+                <p class="fine-print" id="comment-status" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+
+            <div class="comments-list-wrap">
+              <h4>Comments (<span id="comment-count">0</span>)</h4>
+              <div id="comments-list">
+                <p class="fine-print">Loading comments...</p>
+              </div>
             </div>
           </div>
         </div>
@@ -1715,7 +1778,147 @@
           }
         });
       }
-    }());
+    })();
+
+    // Supabase comments and reactions (no login required)
+    (function () {
+      var SUPABASE_URL = 'https://icgexqhayyhrxepdtqia.supabase.co';
+      var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljZ2V4cWhheXlocnhlcGR0cWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyOTgzMTAsImV4cCI6MjEwNTg3NDMxMH0.hahAhhftCxk6kUWQMQjNBW6kBEODmrz71hzHMBjy4nI';
+      var STORY_ID = 'airport-goodbye';
+
+      if (typeof supabase === 'undefined') return;
+      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // Generate a simple client ID for reaction tracking
+      function getClientId() {
+        try {
+          var id = localStorage.getItem('scam-watch-client-id');
+          if (!id) {
+            id = 'c_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+            localStorage.setItem('scam-watch-client-id', id);
+          }
+          return id;
+        } catch (e) {
+          return 'c_anon_' + Math.random().toString(36).slice(2);
+        }
+      }
+      var clientId = getClientId();
+
+      // Load reaction counts
+      function loadReactions() {
+        client.from('reactions').select('reaction_type').eq('story_id', STORY_ID).then(function (res) {
+          if (res.error) return;
+          var up = 0, down = 0;
+          (res.data || []).forEach(function (r) {
+            if (r.reaction_type === 'thumbs_up') up++;
+            else if (r.reaction_type === 'thumbs_down') down++;
+          });
+          document.getElementById('thumbs-up-count').textContent = up;
+          document.getElementById('thumbs-down-count').textContent = down;
+        });
+        // Check user's existing reactions
+        client.from('reactions').select('reaction_type').eq('story_id', STORY_ID).eq('ip_hash', clientId).then(function (res) {
+          if (res.error) return;
+          (res.data || []).forEach(function (r) {
+            if (r.reaction_type === 'thumbs_up') document.getElementById('thumbs-up-btn').classList.add('active');
+            else if (r.reaction_type === 'thumbs_down') document.getElementById('thumbs-down-btn').classList.add('active');
+          });
+        });
+      }
+
+      // Toggle reaction
+      function toggleReaction(type) {
+        var btn = document.getElementById(type === 'thumbs_up' ? 'thumbs-up-btn' : 'thumbs-down-btn');
+        var isActive = btn.classList.contains('active');
+        if (isActive) {
+          client.from('reactions').delete().eq('story_id', STORY_ID).eq('reaction_type', type).eq('ip_hash', clientId).then(function () {
+            btn.classList.remove('active');
+            loadReactions();
+          });
+        } else {
+          client.from('reactions').insert({ story_id: STORY_ID, reaction_type: type, ip_hash: clientId }).then(function (res) {
+            if (!res.error) {
+              btn.classList.add('active');
+              // Remove opposite if active
+              var otherType = type === 'thumbs_up' ? 'thumbs_down' : 'thumbs_up';
+              var otherBtn = document.getElementById(otherType === 'thumbs_up' ? 'thumbs-up-btn' : 'thumbs-down-btn');
+              if (otherBtn.classList.contains('active')) {
+                client.from('reactions').delete().eq('story_id', STORY_ID).eq('reaction_type', otherType).eq('ip_hash', clientId).then(function () {
+                  otherBtn.classList.remove('active');
+                  loadReactions();
+                });
+              } else {
+                loadReactions();
+              }
+            }
+          });
+        }
+      }
+
+      var upBtn = document.getElementById('thumbs-up-btn');
+      var downBtn = document.getElementById('thumbs-down-btn');
+      if (upBtn) upBtn.addEventListener('click', function () { toggleReaction('thumbs_up'); });
+      if (downBtn) downBtn.addEventListener('click', function () { toggleReaction('thumbs_down'); });
+
+      // Load comments
+      function loadComments() {
+        client.from('comments').select('*').eq('story_id', STORY_ID).eq('is_blocked', false).order('created_at', { ascending: false }).then(function (res) {
+          var list = document.getElementById('comments-list');
+          var count = document.getElementById('comment-count');
+          if (res.error) {
+            list.innerHTML = '<p class="fine-print">Could not load comments.</p>';
+            return;
+          }
+          var comments = res.data || [];
+          count.textContent = comments.length;
+          if (comments.length === 0) {
+            list.innerHTML = '<p class="fine-print">No comments yet. Be the first!</p>';
+            return;
+          }
+          list.innerHTML = comments.map(function (c) {
+            var date = new Date(c.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            var safeName = escapeHtml(c.author_name);
+            var safeContent = escapeHtml(c.content).replace(/\n/g, '<br>');
+            return '<div class="comment-item"><div class="comment-author">' + safeName + '</div><div class="comment-date">' + date + '</div><p class="comment-body">' + safeContent + '</p></div>';
+          }).join('');
+        });
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+      }
+
+      // Submit comment
+      var form = document.getElementById('comment-form');
+      if (form) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = document.getElementById('comment-name').value.trim();
+          var text = document.getElementById('comment-text').value.trim();
+          var status = document.getElementById('comment-status');
+          if (!name || !text) {
+            status.textContent = 'Please fill in both fields.';
+            return;
+          }
+          status.textContent = 'Posting...';
+          client.from('comments').insert({ story_id: STORY_ID, author_name: name, content: text, ip_hash: clientId }).then(function (res) {
+            if (res.error) {
+              status.textContent = 'Could not post. Please try again.';
+            } else {
+              status.textContent = 'Thanks! Your comment is live.';
+              form.reset();
+              loadComments();
+              setTimeout(function () { status.textContent = ''; }, 3000);
+            }
+          });
+        });
+      }
+
+      loadReactions();
+      loadComments();
+    })();
   </script>
 </body>
 </html>
