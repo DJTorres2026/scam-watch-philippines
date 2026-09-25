@@ -967,8 +967,33 @@
                   <strong>Warning for others</strong>
                   <p>“If someone you’ve never met in person starts planning how you’ll spend your money, walk away. Video calls don’t mean you know someone. And a sad story years later is often just another try.”</p>
                 </blockquote>
+                <div class="story-actions">
+                  <button class="button button-ghost" id="share-story-btn" type="button">Share this story</button>
+                  <span class="share-status" id="share-status" role="status" aria-live="polite"></span>
+                </div>
               </div>
             </article>
+          </div>
+          <div class="comments-section" id="comments">
+            <h3>Comments & Reactions</h3>
+            <p class="fine-print">Share your thoughts below. You can also react with 👍 or 👎 on the discussion.</p>
+            <div id="giscus-comments">
+              <script src="https://giscus.app/client.js"
+                      data-repo="DJTorres2026/scam-watch-philippines"
+                      data-repo-id="R_kgDOUqdhoA"
+                      data-category="General"
+                      data-category-id="DIC_kwDOUqdhoM4DGWGb"
+                      data-mapping="pathname"
+                      data-strict="0"
+                      data-reactions-enabled="1"
+                      data-emit-metadata="0"
+                      data-input-position="bottom"
+                      data-theme="preferred_color_scheme"
+                      data-lang="en"
+                      crossorigin="anonymous"
+                      async>
+              </script>
+            </div>
           </div>
         </div>
       </div>
@@ -1582,6 +1607,34 @@
       story.addEventListener('input', updateCount);
       contactFirst.addEventListener('change', updateEmailRequirement);
       copyStoryButton.addEventListener('click', copyStoryBackup);
+
+      // Share button: Web Share API with clipboard fallback
+      var shareBtn = document.getElementById('share-story-btn');
+      var shareStatus = document.getElementById('share-status');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function () {
+          var shareData = {
+            title: 'The Airport Goodbye — Scam Watch Philippines',
+            text: 'A true story about a romance scam in the Philippines. Read it on Scam Watch Philippines.',
+            url: window.location.href.split('#')[0] + '#stories'
+          };
+          if (navigator.share) {
+            navigator.share(shareData).catch(function () {
+              // User cancelled or share failed — do nothing
+            });
+          } else if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareData.url).then(function () {
+              shareStatus.textContent = 'Link copied! Paste it to share.';
+              setTimeout(function () { shareStatus.textContent = ''; }, 3000);
+            }).catch(function () {
+              shareStatus.textContent = 'Copy this link: ' + shareData.url;
+            });
+          } else {
+            shareStatus.textContent = 'Copy this link: ' + shareData.url;
+          }
+        });
+      }
+
       setupVoiceTyping();
       updateCount();
       updateEmailRequirement();
