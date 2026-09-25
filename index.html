@@ -1793,7 +1793,7 @@
       var STORY_ID = 'airport-goodbye';
 
       if (typeof supabase === 'undefined') return;
-      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); /* Visitor counter */ (async function() { try { const { data } = await client.from('page_views').select('views').eq('id', 1).single(); if (data) { document.getElementById('visitor-count').textContent = data.views.toLocaleString(); await client.from('page_views').update({ views: data.views + 1 }).eq('id', 1); } } catch (e) { /* counter unavailable */ } })();
+      var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); /* Visitor counter */ (async function() { try { const { data } = await client.rpc('increment_page_views'); if (typeof data === 'number') { document.getElementById('visitor-count').textContent = data.toLocaleString(); } } catch (e) { /* counter unavailable */ } })();
 
       // Generate a simple client ID for reaction tracking
       function getClientId() {
