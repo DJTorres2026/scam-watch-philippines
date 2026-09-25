@@ -13,7 +13,7 @@
     h1 { color: var(--amber); }
     .login-box, .admin-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 32px; margin-top: 24px; }
     input, textarea, button { font: inherit; }
-    input[type="password"], input[type="text"] { width: 100%; padding: 12px; margin: 8px 0 16px; background: var(--bg); color: var(--ink); border: 2px solid var(--line); border-radius: 8px; }
+    input[type="password"], input[type="email"], input[type="text"] { width: 100%; padding: 12px; margin: 8px 0 16px; background: var(--bg); color: var(--ink); border: 2px solid var(--line); border-radius: 8px; }
     button { background: var(--amber); color: #101820; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; }
     button.danger { background: var(--danger); }
     button.small { padding: 6px 12px; font-size: 14px; margin-right: 8px; }
@@ -27,62 +27,60 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>🛡️ Scam Watch Admin</h1>
-    <p>Private moderation panel. Only you have access.</p>
-
+    <h1>Scam Watch Admin</h1>
+    <p>Private moderation panel. Sign in to continue.</p>
     <div class="login-box" id="login-box">
-      <h2>Enter admin password</h2>
-      <input type="password" id="admin-pass" placeholder="Password" autocomplete="off" />
-      <button onclick="doLogin()">Unlock</button>
+      <h2>Admin sign in</h2>
+      <input type="email" id="admin-email" placeholder="Email" autocomplete="username" />
+      <input type="password" id="admin-pass" placeholder="Password" autocomplete="current-password" />
+      <button onclick="doLogin()">Sign in</button>
       <p class="status" id="login-status"></p>
     </div>
-
     <div class="admin-panel hidden" id="admin-panel">
-      <h2>Comments</h2>
-      <button class="small" onclick="loadAll()">🔄 Refresh</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;">Comments</h2>
+        <div>
+          <button class="small" onclick="loadAll()">Refresh</button>
+          <button class="small" onclick="doLogout()">Sign out</button>
+        </div>
+      </div>
       <div id="admin-comments" style="margin-top:16px;"><p>Loading...</p></div>
-
       <h2 style="margin-top:32px;">Blocked visitors</h2>
       <div id="blocked-list"><p>Loading...</p></div>
     </div>
   </div>
-
   <script>
     var SUPABASE_URL = 'https://icgexqhayyhrxepdtqia.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljZ2V4cWhheXlocnhlcGR0cWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyOTgzMTAsImV4cCI6MjEwNTg3NDMxMH0.hahAhhftCxk6kUWQMQjNBW6kBEODmrz71hzHMBjy4nI';
-    var ADMIN_PASSWORD = 'binoo-admin-2026';
     var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    function doLogin() {
+    async function doLogin() {
+      var email = document.getElementById('admin-email').value.trim();
       var pass = document.getElementById('admin-pass').value;
-      if (pass === ADMIN_PASSWORD) {
+      var status = document.getElementById('login-status');
+      status.textContent = 'Signing in...';
+      var res = await client.auth.signInWithPassword({ email: email, password: pass });
+      if (res.error) { status.textContent = 'Sign in failed. Check your email and password.'; return; }
+      status.textContent = '';
+      document.getElementById('login-box').classList.add('hidden');
+      document.getElementById('admin-panel').classList.remove('hidden');
+      loadAll();
+    }
+    async function doLogout() {
+      await client.auth.signOut();
+      document.getElementById('admin-panel').classList.add('hidden');
+      document.getElementById('login-box').classList.remove('hidden');
+      document.getElementById('admin-pass').value = '';
+    }
+    document.getElementById('admin-pass').addEventListener('keypress', function(e) { if (e.key === 'Enter') doLogin(); });
+    client.auth.getSession().then(function(res) {
+      if (res.data && res.data.session) {
         document.getElementById('login-box').classList.add('hidden');
         document.getElementById('admin-panel').classList.remove('hidden');
-        try { sessionStorage.setItem('sw-admin', '1'); } catch(e) {}
         loadAll();
-      } else {
-        document.getElementById('login-status').textContent = 'Wrong password.';
       }
-    }
-    document.getElementById('admin-pass').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') doLogin();
     });
-    try {
-      if (sessionStorage.getItem('sw-admin') === '1') {
-        document.getElementById('login-box').classList.add('hidden');
-        document.getElementById('admin-panel').classList.remove('hidden');
-        loadAll();
-      }
-    } catch(e) {}
-
-    function esc(s) {
-      return String(s).replace(/[&<>"']/g, function(m) {
-        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
-      });
-    }
-
+    function esc(s) { return String(s).replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
     function loadAll() { loadComments(); loadBlocked(); }
-
     function loadComments() {
       client.from('comments').select('*').order('created_at', {ascending: false}).limit(100).then(function(res) {
         var div = document.getElementById('admin-comments');
@@ -91,46 +89,21 @@
         div.innerHTML = res.data.map(function(c) {
           var cls = c.is_blocked ? 'comment-row blocked' : 'comment-row';
           var d = new Date(c.created_at).toLocaleString();
-          return '<div class="' + cls + '">' +
-            '<div class="comment-meta">' + esc(c.author_name) + ' · ' + d + (c.is_blocked ? ' · 🚫 HIDDEN' : '') + '</div>' +
-            '<p>' + esc(c.content) + '</p>' +
-            '<button class="small danger" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' +
-            (c.is_blocked
-              ? '<button class="small" onclick="unblockComment(\'' + c.id + '\')">Unhide</button>'
-              : '<button class="small" onclick="blockComment(\'' + c.id + '\',\'' + esc(c.ip_hash||'') + '\')">Hide + Block user</button>') +
-            '</div>';
+          return '<div class="' + cls + '"><div class="comment-meta">' + esc(c.author_name) + ' | ' + d + (c.is_blocked ? ' | HIDDEN' : '') + '</div><p>' + esc(c.content) + '</p><button class="small danger" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' + (c.is_blocked ? '<button class="small" onclick="unblockComment(\'' + c.id + '\')">Unhide</button>' : '<button class="small" onclick="blockComment(\'' + c.id + '\',\'' + esc(c.ip_hash||'') + '\')">Hide + Block user</button>') + '</div>';
         }).join('');
       });
     }
-
-    function deleteComment(id) {
-      if (!confirm('Delete this comment permanently?')) return;
-      client.from('comments').delete().eq('id', id).then(function() { loadComments(); });
-    }
-    function blockComment(id, ipHash) {
-      if (!confirm('Hide this comment and block this visitor from commenting again?')) return;
-      client.from('comments').update({is_blocked: true}).eq('id', id).then(function() {
-        if (ipHash) client.from('blocked_ips').upsert({ip_hash: ipHash, reason: 'Blocked by admin'}).then(function() { loadAll(); });
-        else loadComments();
-      });
-    }
-    function unblockComment(id) {
-      client.from('comments').update({is_blocked: false}).eq('id', id).then(function() { loadComments(); });
-    }
-
+    function deleteComment(id) { if (!confirm('Delete this comment permanently?')) return; client.from('comments').delete().eq('id', id).then(function() { loadComments(); }); }
+    function blockComment(id, ipHash) { if (!confirm('Hide this comment and block this visitor from commenting again?')) return; client.from('comments').update({is_blocked: true}).eq('id', id).then(function() { if (ipHash) client.from('blocked_ips').upsert({ip_hash: ipHash, reason: 'Blocked by admin'}).then(function() { loadAll(); }); else loadComments(); }); }
+    function unblockComment(id) { client.from('comments').update({is_blocked: false}).eq('id', id).then(function() { loadComments(); }); }
     function loadBlocked() {
       client.from('blocked_ips').select('*').order('blocked_at', {ascending: false}).then(function(res) {
         var div = document.getElementById('blocked-list');
         if (res.error || !res.data.length) { div.innerHTML = '<p>No blocked visitors.</p>'; return; }
-        div.innerHTML = res.data.map(function(b) {
-          return '<div class="comment-row"><div class="comment-meta">Blocked ' + new Date(b.blocked_at).toLocaleString() + '</div>' +
-            '<button class="small" onclick="unblockIp(\'' + esc(b.ip_hash) + '\')">Unblock</button></div>';
-        }).join('');
+        div.innerHTML = res.data.map(function(b) { return '<div class="comment-row"><div class="comment-meta">Blocked ' + new Date(b.blocked_at).toLocaleString() + '</div><button class="small" onclick="unblockIp(\'' + esc(b.ip_hash) + '\')">Unblock</button></div>'; }).join('');
       });
     }
-    function unblockIp(ipHash) {
-      client.from('blocked_ips').delete().eq('ip_hash', ipHash).then(function() { loadBlocked(); });
-    }
+    function unblockIp(ipHash) { client.from('blocked_ips').delete().eq('ip_hash', ipHash).then(function() { loadBlocked(); }); }
   </script>
 </body>
 </html>
