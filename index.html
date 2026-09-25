@@ -599,6 +599,21 @@
     .field.wide { grid-column: 1 / -1; }
     label, legend { font-weight: 700; }
     .field-help { margin: -2px 0 0; color: var(--ink-soft); font-size: 15px; line-height: 1.35; }
+    .prompt-starters { margin: 10px 0 2px; }
+    .prompt-starters p { margin: 0 0 8px; color: var(--ink-soft); font-size: 15px; }
+    .prompt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .prompt-chip {
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .prompt-chip:hover { border-color: var(--navy); color: var(--navy); }
+    .prompt-chip:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
     input, select, textarea {
       width: 100%;
       min-height: 51px;
@@ -1231,6 +1246,14 @@
                   </button>
                   <p class="voice-status" id="voice-status" role="status" aria-live="polite">Your words will appear in the story box as you speak.</p>
                 </div>
+                <div class="prompt-starters">
+                  <p>Not sure where to begin? Tap one to start your story:</p>
+                  <div class="prompt-chips">
+                    <button type="button" class="prompt-chip" data-prompt="We first met ">The first meeting</button>
+                    <button type="button" class="prompt-chip" data-prompt="The first time money came up, ">The first ask for money</button>
+                    <button type="button" class="prompt-chip" data-prompt="I knew something was wrong when ">The moment I knew</button>
+                  </div>
+                </div>
                 <textarea id="story-text" name="Full story" required minlength="250" inputmode="text" enterkeyhint="enter" autocapitalize="sentences" spellcheck="true" aria-describedby="voice-tip voice-status story-help" placeholder="Type here, or use the microphone button above to speak your story."></textarea>
                 <p class="field-help" id="story-help"><span id="story-count">0</span> characters — aim for at least 100 words.</p>
               </div>
@@ -1378,6 +1401,23 @@
       function updateCount() {
         count.textContent = String(story.value.length);
       }
+
+      var promptChips = document.querySelectorAll('.prompt-chip');
+      promptChips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          var text = chip.getAttribute('data-prompt');
+          var start = story.selectionStart === null ? story.value.length : story.selectionStart;
+          var end = story.selectionEnd === null ? story.value.length : story.selectionEnd;
+          var before = story.value.slice(0, start);
+          var after = story.value.slice(end);
+          if (before && !/\s$/.test(before)) { text = ' ' + text; }
+          story.value = before + text + after;
+          story.focus();
+          var caret = (before + text).length;
+          story.setSelectionRange(caret, caret);
+          updateCount();
+        });
+      });
 
       function updateEmailRequirement() {
         email.required = contactFirst.checked;
