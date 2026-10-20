@@ -953,7 +953,26 @@
       html { scroll-behavior: auto; }
       .nav-stories, .button-stories, .mobile-nav a:first-child { animation: none; }
     }
-  </style>
+  
+  .newsletter-archive { margin-top: 20px; }
+  .podcast-band h2 { margin: 6px 0 10px; }
+  .podcast-tagline { margin: 0; color: var(--ink-soft); font-size: 1.15rem; }
+  .episode-card { display: grid; grid-template-columns: minmax(0, 300px) 1fr; gap: 28px; align-items: start; margin-top: 34px; padding: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+  .episode-cover { width: 100%; height: auto; border-radius: var(--radius-md); }
+  .episode-body h3 { margin: 0 0 10px; font-size: 1.4rem; line-height: 1.25; }
+  .episode-body p { margin: 0; color: var(--ink-soft); }
+  .episode-photo { width: 100%; max-width: 430px; height: auto; border-radius: var(--radius-md); margin-top: 16px; }
+  .episode-audio { width: 100%; margin-top: 16px; }
+  .podcast-invite { max-width: 760px; margin: 24px 0 0; font-size: 1.05rem; }
+  .warnings-box { margin-bottom: 40px; padding: 14px 20px 16px; background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--amber); border-radius: var(--radius-md); }
+  .warnings-box h2 { margin: 0 0 6px; font-size: 1.05rem; }
+  .warnings-box ul { margin: 0; padding-left: 20px; }
+  .warnings-box li { margin: 3px 0; }
+  @media (max-width: 720px) {
+    .episode-card { grid-template-columns: 1fr; }
+    .episode-cover { max-width: 300px; }
+  }
+</style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -1006,6 +1025,26 @@
       </div>
     </section>
 
+    <section class="section podcast-band" id="podcast" aria-labelledby="podcast-title">
+      <div class="wrap">
+        <span class="eyebrow">The podcast</span>
+        <h2 id="podcast-title">Podcast Interviews</h2>
+        <p class="podcast-tagline">Real stories from the Philippines, in their own words.</p>
+        <article class="episode-card">
+          <img class="episode-cover" src="podcasts/dominic-story-cover.webp" alt="Cover art for the Dominic's Story podcast episode" />
+          <div class="episode-body">
+            <h3>Dominic's Story: A Young Marine, and a Hard Lesson</h3>
+            <p>Dominic tells how scammers spotted him as a new Marine in Olongapo in 1987 — and how a 2013 trip to Butuan taught him the same lesson all over again.</p>
+            <img class="episode-photo" src="podcasts/dominic-story-photo.jpg" alt="Dominic during his time in the Philippines" />
+            <audio class="episode-audio" controls preload="metadata">
+              <source src="podcasts/dominic-story.mp3" type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        </article>
+        <p class="podcast-invite">Were you scammed in the Philippines? You can be interviewed too — email us at <a href="mailto:TLD314@proton.me">TLD314@proton.me</a> and we will send you a few questions. You can include one photo, of you or from your time there.</p>
+      </div>
+    </section>
     <div class="purpose-strip">
       <div class="wrap">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 18h6v-2H9v2Zm-3-4h12v-2H6v2Zm-3-4h18V8H3v2Z"/></svg>
@@ -1019,6 +1058,7 @@
           <span class="eyebrow">Newsletter</span>
           <h2 id="newsletter-title">Get new scam stories and warning signs.</h2>
           <p>Subscribe to Scam Watch Philippines on Substack for new stories, practical red flags, and lessons that may help you or someone you know.</p>
+          <p class="newsletter-archive"><a class="button button-stories" href="https://torokin.substack.com/archive">Read past issues</a></p>
         </div>
         <div class="newsletter-embed">
           <iframe src="https://torokin.substack.com/embed" title="Subscribe to the Scam Watch Philippines newsletter" loading="lazy"></iframe>
@@ -1337,6 +1377,17 @@
       </div>
     </section>
 
+    <aside class="official-warnings" aria-label="Official warnings">
+      <div class="wrap">
+        <div class="warnings-box">
+          <h2>Official warnings</h2>
+          <ul>
+            <li><a href="https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins/world-investor-week-2026-investor-bulletin" target="_blank" rel="noopener">SEC warning on relationship investment scams</a></li>
+            <li><a href="https://cryptonews.net/news/security/33544618/" target="_blank" rel="noopener">News report on the joint warning</a></li>
+          </ul>
+        </div>
+      </div>
+    </aside>
     <section class="disclaimer" id="privacy" aria-labelledby="disclaimer-title">
       <div class="wrap disclaimer-grid">
         <h2 id="disclaimer-title">Important notice</h2>
@@ -1353,6 +1404,7 @@
       </div>
       <nav class="footer-links" aria-label="Footer navigation">
         <a href="#stories">Stories</a>
+        <a href="#podcast">Podcast</a>
         <a href="#newsletter">Newsletter</a>
         <a href="#share">Submit</a>
         <a href="#review">Share safely</a>
