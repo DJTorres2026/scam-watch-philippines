@@ -972,6 +972,24 @@
     .episode-card { grid-template-columns: 1fr; }
     .episode-cover { max-width: 300px; }
   }
+
+  /* Batch #1 photo backgrounds — lower sections only; hero and footer untouched.
+     Dark overlays keep text readable; type cards keep their own light surface. */
+  .photo-section { background-size: cover; background-position: center; background-repeat: no-repeat; }
+  #scam-types.photo-section { background-image: linear-gradient(rgba(8,14,18,.78), rgba(8,14,18,.78)), url('assets/scam-watch-bg-dancer.jpg'); }
+  #scam-types.photo-section .eyebrow { color: #efbd68; }
+  #scam-types.photo-section .section-heading h2 { color: var(--white); }
+  #scam-types.photo-section .section-heading p { color: #dbe4e8; }
+  #red-flags.photo-section { background-image: linear-gradient(rgba(6,23,38,.82), rgba(6,23,38,.82)), url('assets/scam-watch-bg-club.jpg'); }
+  #review.photo-section { background-image: linear-gradient(rgba(8,14,18,.78), rgba(8,14,18,.78)), url('assets/scam-watch-bg-band.jpg'); }
+  #review.photo-section .eyebrow { color: #efbd68; }
+  #review.photo-section .section-heading h2 { color: var(--white); }
+  #review.photo-section .section-heading p { color: #dbe4e8; }
+  #review.photo-section .process-step span { color: #efbd68; }
+  #review.photo-section .process-step h3 { color: var(--white); }
+  #review.photo-section .process-step p { color: #dbe4e8; }
+  #about.photo-section { background-image: linear-gradient(rgba(8,14,18,.78), rgba(8,14,18,.78)), url('assets/scam-watch-bg-woodstock.jpg'); }
+  #about.photo-section h2, #about.photo-section .about-copy p { color: var(--white); }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1157,7 +1175,7 @@
       </div>
     </section>
 
-    <section class="section" id="scam-types" aria-labelledby="types-title">
+    <section class="section photo-section" id="scam-types" aria-labelledby="types-title">
       <div class="wrap">
         <div class="section-heading">
           <div>
@@ -1177,7 +1195,7 @@
       </div>
     </section>
 
-    <section class="section redflags" id="red-flags" aria-labelledby="flags-title">
+    <section class="section redflags photo-section" id="red-flags" aria-labelledby="flags-title">
       <div class="wrap">
         <div class="section-heading">
           <div>
@@ -1336,7 +1354,7 @@
       <div class="dialog-body" id="story-dialog-body"></div>
     </dialog>
 
-    <section class="section" id="review" aria-labelledby="review-title">
+    <section class="section photo-section" id="review" aria-labelledby="review-title">
       <div class="wrap">
         <div class="section-heading">
           <div>
@@ -1354,7 +1372,7 @@
       </div>
     </section>
 
-    <section class="about-band" id="about" aria-labelledby="about-title">
+    <section class="about-band photo-section" id="about" aria-labelledby="about-title">
       <div class="wrap about-grid">
         <h2 id="about-title">Built to help the next person pause sooner.</h2>
         <div class="about-copy">
